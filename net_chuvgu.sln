@@ -1,0 +1,16 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "net_chuvgu", "net_chuvgu.csproj", "{637C1AC0-DF69-43D1-BC06-67B093097474}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{637C1AC0-DF69-43D1-BC06-67B093097474}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{637C1AC0-DF69-43D1-BC06-67B093097474}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{637C1AC0-DF69-43D1-BC06-67B093097474}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{637C1AC0-DF69-43D1-BC06-67B093097474}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal

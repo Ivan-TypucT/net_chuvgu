@@ -1,0 +1,129 @@
+
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Маркетплейс — SPA</title>
+    <link rel="stylesheet" href="Css/Ext_theme_all.css" />
+    <link rel="stylesheet" href="Css/style.css" />
+    <style>
+        body { margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; }
+        header { background:#15428B; color:#fff; display:flex; align-items:center; justify-content:space-between; padding:8px 16px; }
+        nav a { color:#fff; text-decoration:none; margin:0 10px; font-weight:600; }
+        nav a.active { text-decoration: underline; }
+        main { max-width: 1100px; margin: 0 auto; padding: 10px; }
+        section { display:none; }
+        section.active { display:block; }
+        .grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap:12px; }
+        .news-item { background:#fff; border-radius:8px; padding:12px; box-shadow:0 2px 4px rgba(0,0,0,.08); }
+        .news-item h4 { margin:6px 0; }
+        .list { background:#fff; border-radius:8px; padding:12px; margin:12px 0; box-shadow:0 2px 4px rgba(0,0,0,.08); }
+        .login-box { max-width:360px; margin:0 auto; background:#fff; padding:16px; border-radius:8px; box-shadow:0 2px 4px rgba(0,0,0,.1); }
+        .login-box input { width:100%; padding:10px; margin:6px 0; }
+        .map iframe { width:100%; height:340px; border:0; border-radius:8px; }
+    </style>
+</head>
+<body class="marketplace-container">
+<header>
+    <div class="header-logo">Чистый Дом</div>
+    <nav id="top-nav">
+        <a href="#home" data-section="home" class="active">Новости</a>
+        <a href="#orgs" data-section="orgs">Другие организации</a>
+        <a href="#create" data-section="create">Создание сайта</a>
+        <a href="#holidays" data-section="holidays">Праздники</a>
+        <a href="#changes" data-section="changes">Изменения в прайсе</a>
+        <a href="#catalog" data-section="catalog">Каталог</a>
+        <a href="#about" data-section="about">О нас</a>
+        <a href="#login" data-section="login">Логин</a>
+    </nav>
+</header>
+
+<main>
+    <div id="banner" class="promo-banner" style="display:none"></div>
+
+    <section id="section-home" class="active">
+        <h2>Новости</h2>
+        <div id="news-list" class="grid"></div>
+    </section>
+
+    <section id="section-orgs">
+        <h2>Другие организации</h2>
+        <div id="orgs-list" class="list"></div>
+    </section>
+
+    <section id="section-create">
+        <h2>Создание сайта</h2>
+        <div class="list">
+            <p>Нужен сайт под ключ? Мы поможем: подберём структуру, наполним контентом и подключим домен/хостинг.</p>
+            <p>Напишите нам по телефону из раздела «О нас», либо оставьте заявку после авторизации.</p>
+        </div>
+    </section>
+
+    <section id="section-holidays">
+        <h2>Праздники</h2>
+        <div id="holidays-list" class="list"></div>
+    </section>
+
+    <section id="section-changes">
+        <h2>Изменения в прайсе/каталоге</h2>
+        <div id="changes-list" class="grid"></div>
+    </section>
+
+    <section id="section-catalog">
+        <h2>Каталог товаров / прайс услуг</h2>
+        <div class="category-panel" id="categories"></div>
+        <div class="filter-panel">
+            <input type="text" id="search" placeholder="Поиск по названию или бренду" />
+            <button id="searchBtn">Найти</button>
+        </div>
+        <div id="products" class="grid"></div>
+    </section>
+
+    <section id="section-about">
+        <h2>Информация об организации</h2>
+        <div class="list">
+            <div id="about-desc"></div>
+            <h3>Адреса</h3>
+            <ul id="about-addresses"></ul>
+            <h3>Телефоны</h3>
+            <ul id="about-phones"></ul>
+            <h3>Карта проезда</h3>
+            <div class="map" id="about-map"></div>
+        </div>
+    </section>
+
+    <section id="section-login">
+        <h2>Логин</h2>
+        <div class="login-box">
+            <div id="login-status" style="margin-bottom:8px"></div>
+            <input id="login-email" type="email" placeholder="Email" />
+            <input id="login-password" type="password" placeholder="Пароль" />
+            <button id="login-btn">Войти</button>
+        </div>
+    </section>
+</main>
+
+<footer class="footer">© Чистый Дом</footer>
+<script src="Start/Ext/ext.js"></script>
+<script src="Start/AppStart/app.js" type="module"></script>
+<script>
+    // Глобальная подстановка JWT в запросы Ext.Ajax и авто-обновление токена
+    if (window.Ext && Ext.Ajax) {
+        Ext.Ajax.on('beforerequest', function(conn, options) {
+            var token = localStorage.getItem('authToken');
+            if (token) {
+                options.headers = options.headers || {};
+                options.headers['Authorization'] = 'Bearer ' + token;
+            }
+        });
+        setInterval(function() {
+            var token = localStorage.getItem('authToken');
+            if (token) {
+                Ext.Ajax.request({ url: '/api/auth/refresh', method: 'POST' });
+            }
+        }, 5 * 60 * 1000);
+    }
+</script>
+</body>
+</html>

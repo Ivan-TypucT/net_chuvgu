@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Маркетплейс бытовой химии</title>
+    <link rel="stylesheet" type="text/css" href="Css/Ext_theme_all.css">
+    <script src="Start/Ext/ext.js"></script>
+    
+    <style>
+        .product-card {
+            padding: 10px;
+            text-align: center;
+        }
+        .product-image {
+            height: 150px;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            margin-bottom: 10px;
+        }
+        .header-logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: #15428B;
+            padding: 10px;
+        }
+        .promo-banner {
+            background-color: #e1f5fe;
+            padding: 15px;
+            text-align: center;
+            margin-bottom: 20px;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+<script type="text/javascript">
+    Ext.onReady(function() {
+        // Модели данных
+        Ext.define('Product', {
+            extend: 'Ext.data.Model',
+            fields: [
+                {name: 'id', type: 'int'},
+                {name: 'name', type: 'string'},
+                {name: 'brand', type: 'string'},
+                {name: 'price', type: 'float'},
+                {name: 'image', type: 'string'},
+                {name: 'rating', type: 'float'}
+            ]
+        });
+
+        Ext.define('User', {
+            extend: 'Ext.data.Model',
+            fields: [
+                {name: 'id', type: 'int'},
+                {name: 'firstName', type: 'string'},
+                {name: 'lastName', type: 'string'},
+                {name: 'email', type: 'string'},
+                {name: 'password', type: 'string'}
+            ]
+        });
+
+        // Хранилища данных
+        var productStore = Ext.create('Ext.data.Store', {
+            model: 'Product',
+            data: [
+                {id: 1, name: 'Стиральный порошок', brand: 'Ariel', price: 450, image: 'https://example.com/ariel.jpg', rating: 4.8},
+                {id: 2, name: 'Стиральный порошок', brand: 'Ушастый нянь', price: 380, image: 'https://example.com/ushastiy.jpg', rating: 4.5},
+                {id: 3, name: 'Гель для стирки', brand: 'Tide', price: 520, image: 'https://example.com/tide.jpg', rating: 4.7},
+                {id: 4, name: 'Кондиционер для белья', brand: 'Lenor', price: 320, image: 'https://example.com/lenor.jpg', rating: 4.6},
+                {id: 5, name: 'Отбеливатель', brand: 'Бос', price: 210, image: 'https://example.com/bos.jpg', rating: 4.3},
+                {id: 6, name: 'Пятновыводитель', brand: 'Vanish', price: 390, image: 'https://example.com/vanish.jpg', rating: 4.4}
+            ]
+        });
+
+        var userStore = Ext.create('Ext.data.Store', {
+            model: 'User',
+            data: [
+                {id: 1, firstName: 'Иван', lastName: 'Иванов', email: 'ivan@mail.com', password: '12345'}
+            ]
+        });
+
+        // Переменная для отслеживания текущего пользователя
+        var currentUser = null;
+
+        // Компонент карточки товара
+        Ext.define('ProductCard', {
+            extend: 'Ext.container.Container',
+            cls: 'product-card',
+            layout: 'vbox',
+            width: 200,
+            height: 250,
+            items: [{
+                xtype: 'container',
+                cls: 'product-image',
+                bind: {
+                    style: {
+                        backgroundImage: 'url({image})'
+                    }
+                }
+            }, {
+                xtype: 'container',
+                html: '{brand}'
+            }, {
+                xtype: 'container',
+                html: '{name}'
+            }, {
+                xtype: 'container',
+                html: '{price} руб.'
+            }, {
+                xtype: 'button',
+                text: 'В корзину',
+                handler: function() {
+                    Ext.Msg.alert('Успешно', 'Товар добавлен в корзину');
+                }
+            }]
+        });
+
+        // Главная панель
+        var mainPanel = Ext.create('Ext.panel.Panel', {
+            title: 'Маркетплейс бытовой химии',
+            layout: 'fit',
+            renderTo: Ext.getBody(),
+            items: [{
+                xtype: 'tabpanel',
+                items: [{
+                    title: 'Главная',
+                    layout: 'vbox',
+                    items: [{
+                        xtype: 'container',
+                        cls: 'promo-banner',
+                        html: '<h2>Скидка 20% на все товары Ariel до конца месяца!</h2>'
+                    }, {
+                        xtype: 'container',
+                        layout: 'hbox',
+                        items: [{
+                            xtype: 'textfield',
+                            fieldLabel: 'Поиск',
+                            labelWidth: 40,
+                            margin: '0 10px 0 0'
+                        }, {
+                            xtype: 'combo',
+                            fieldLabel: 'Бренд',
+                            labelWidth: 40,
+                            store: ['Все', 'Ariel', 'Ушастый нянь', 'Tide', 'Lenor']
+                        }]
+                    }, {
+                        xtype: 'dataview',
+                        flex: 1,
+                        store: productStore,
+                        itemTpl: new Ext.XTemplate(
+                            '<div class="product-card">',
+                            '<div class="product-image" style="background-image: url({image})"></div>',
+                            '<div><b>{brand}</b></div>',
+                            '<div>{name}</div>',
+                            '<div>{price} руб.</div>',
+                            '<div>Рейтинг: {rating}</div>',
+                            '<button onclick="Ext.Msg.alert(\'Успешно\', \'Товар добавлен в корзину\')">В корзину</button>',
+                            '</div>'
+                        ),
+                        layout: {
+                            type: 'hbox',
+                            pack: 'start'
+                        }
+                    }]
+                }, {
+                    title: 'Корзина',
+                    html: '<div style="padding:20px;text-align:center"><h3>Ваша корзина пуста</h3><p>Добавьте товары с главной страницы</p></div>'
+                }, {
+                    title: 'Избранное',
+                    html: '<div style="padding:20px;text-align:center"><h3>Список избранного пуст</h3><p>Добавляйте товары в избранное, чтобы не потерять</p></div>'
+                }]
+            }],
+            tbar: [{
+                xtype: 'tbtext',
+                cls: 'header-logo',
+                text: 'Чистота+'
+            }, '->', {
+                xtype: 'button',
+                text: 'Войти',
+                id: 'loginButton',
+                handler: function() {
+                    authWindow.show();
+                }
+            }, {
+                xtype: 'button',
+                text: 'Регистрация',
+                handler: function() {
+                    registerWindow.show();
+                }
+            }]
+        });
+
+        // Окно авторизации
+        var authForm = Ext.create('Ext.form.Panel', {
+            bodyPadding: 10,
+            defaults: {
+                anchor: '100%',
+                allowBlank: false
+            },
+            items: [{
+                xtype: 'textfield',
+                name: 'email',
+                fieldLabel: 'Email',
+                vtype: 'email'
+            }, {
+                xtype: 'textfield',
+                name: 'password',
+                fieldLabel: 'Пароль',
+                inputType: 'password'
+            }],
+            buttons: [{
+                text: 'Войти',
+                formBind: true,
+                handler: function() {
+                    var form = this.up('form').getForm();
+                    if (form.isValid()) {
+                        var values = form.getValues();
+                        var user = userStore.findRecord('email', values.email);
+
+                        if (user && user.get('password') === values.password) {
+                            currentUser = user;
+                            Ext.getCmp('loginButton').setText(user.get('firstName'));
+                            this.up('window').close();
+                            Ext.Msg.alert('Успех', 'Вы успешно авторизовались!');
+                        } else {
+                            Ext.Msg.alert('Ошибка', 'Неверный email или пароль');
+                        }
+                    }
+                }
+            }, {
+                text: 'Отмена',
+                handler: function() {
+                    this.up('window').close();
+                }
+            }]
+        });
+
+        var authWindow = Ext.create('Ext.window.Window', {
+            title: 'Авторизация',
+            width: 350,
+            height: 200,
+            layout: 'fit',
+            closable: true,
+            resizable: false,
+            modal: true,
+            items: [authForm]
+        });
+
+        // Окно регистрации
+        var registerForm = Ext.create('Ext.form.Panel', {
+            bodyPadding: 10,
+            defaults: {
+                anchor: '100%',
+                allowBlank: false
+            },
+            items: [{
+                xtype: 'textfield',
+                name: 'firstName',
+                fieldLabel: 'Имя'
+            }, {
+                xtype: 'textfield',
+                name: 'lastName',
+                fieldLabel: 'Фамилия'
+            }, {
+                xtype: 'textfield',
+                name: 'email',
+                fieldLabel: 'Email',
+                vtype: 'email'
+            }, {
+                xtype: 'textfield',
+                name: 'password',
+                fieldLabel: 'Пароль',
+                inputType: 'password'
+            }, {
+                xtype: 'textfield',
+                name: 'confirmPassword',
+                fieldLabel: 'Подтверждение пароля',
+                inputType: 'password',
+                validator: function(value) {
+                    var password = this.up('form').down('[name=password]').getValue();
+                    return value === password ? true : 'Пароли не совпадают';
+                }
+            }],
+            buttons: [{
+                text: 'Зарегистрироваться',
+                formBind: true,
+                handler: function() {
+                    var form = this.up('form').getForm();
+                    if (form.isValid()) {
+                        var values = form.getValues();
+
+                        // Проверяем, нет ли уже пользователя с таким email
+                        var existingUser = userStore.findRecord('email', values.email);
+                        if (existingUser) {
+                            Ext.Msg.alert('Ошибка', 'Пользователь с таким email уже существует');
+                            return;
+                        }
+
+                        // Добавляем нового пользователя
+                        userStore.add({
+                            id: userStore.getCount() + 1,
+                            firstName: values.firstName,
+                            lastName: values.lastName,
+                            email: values.email,
+                            password: values.password
+                        });
+
+                        this.up('window').close();
+                        Ext.Msg.alert('Успех', 'Вы успешно зарегистрировались!');
+                    }
+                }
+            }, {
+                text: 'Отмена',
+                handler: function() {
+                    this.up('window').close();
+                }
+            }]
+        });
+
+        var registerWindow = Ext.create('Ext.window.Window', {
+            title: 'Регистрация',
+            width: 400,
+            height: 320,
+            layout: 'fit',
+            closable: true,
+            resizable: false,
+            modal: true,
+            items: [registerForm]
+        });
+    });
+</script>
+</body>
+</html>

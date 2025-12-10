@@ -1,0 +1,6 @@
+@net_chuvgu_HostAddress = http://localhost:5002
+
+GET {{net_chuvgu_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
