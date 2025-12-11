@@ -17,7 +17,7 @@ public class Order
     public decimal Total { get; set; }
         
     public int ItemsCount { get; set; }
-    public string ShippingAddress { get; set; }
+    public string ShippingAddress { get; set; } = "UserDefaultShippingAddress";
     public string PaymentMethod { get; set; }
         
     public virtual User User { get; set; }

@@ -61,6 +61,7 @@ public class AuthController : ControllerBase
             Email = request.Email,
             Phone = request.Phone,
             CreatedAt = DateTime.UtcNow,
+            Avatar = "",
             AuthorizationData = new AuthorizationData
             {
                 PasswordHash = HashPassword(request.Password, salt),
@@ -91,6 +92,103 @@ public class AuthController : ControllerBase
 
         var token = GenerateJwtToken(user);
         return Ok(new { success = true, token });
+    }
+    
+    [HttpGet("me")]
+    [Authorize]
+    public async Task<IActionResult> GetCurrentUser()
+    {
+        var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (!int.TryParse(userIdStr, out var userId))
+            return Unauthorized(new { success = false, message = "Пользователь не авторизован" });
+
+        var user = await _context.Users
+            .Include(u => u.AuthorizationData)
+            .FirstOrDefaultAsync(u => u.Id == userId);
+
+        if (user == null)
+            return NotFound(new { success = false, message = "Пользователь не найден" });
+
+        return Ok(new
+        {
+            success = true,
+            data = new
+            {
+                user.Id,
+                user.FirstName,
+                user.LastName,
+                user.Email,
+                user.Phone,
+                user.Avatar,
+                user.CreatedAt,
+                accessLevel = user.AuthorizationData.GetAccessLevel(),
+                isBanned = user.AuthorizationData.IsBanned
+            }
+        });
+    }
+    
+      /// <summary>
+    /// ПРИВАТНЫЙ МЕТОД для ручного изменения AccessLevel
+    /// Вызывается ТОЛЬКО из кода, не через API
+    /// </summary>
+    /// <param name="userId">ID пользователя</param>
+    /// <param name="newAccessLevel">Новый уровень доступа (0 - user, 1+ - admin)</param>
+    private async Task<bool> ChangeUserAccessLevel(int userId, int newAccessLevel)
+    {
+        try
+        {
+            Console.WriteLine($"🔄 Изменение AccessLevel для пользователя {userId} на {newAccessLevel}");
+            
+            var user = await _context.Users
+                .Include(u => u.AuthorizationData)
+                .FirstOrDefaultAsync(u => u.Id == userId);
+
+            if (user == null)
+            {
+                Console.WriteLine($"❌ Пользователь {userId} не найден");
+                return false;
+            }
+
+            // Проверяем, есть ли AuthorizationData
+            if (user.AuthorizationData == null)
+            {
+                Console.WriteLine($"❌ AuthorizationData не существует для пользователя {userId}");
+                
+                // Создаем AuthorizationData если её нет
+                user.AuthorizationData = new AuthorizationData(newAccessLevel)
+                {
+                    PasswordHash = "temp_hash", // Нужно будет установить реальный пароль
+                    Salt = GenerateSalt(),
+                    LastLogin = DateTime.UtcNow,
+                    IsBanned = false
+                };
+                
+                Console.WriteLine($"✅ Создана новая AuthorizationData");
+            }
+            else
+            {
+                // Изменяем существующий AccessLevel
+                // Сделаем AccessLevel публичным в модели или используем рефлексию
+                
+              
+                user.AuthorizationData.AccessLevel = newAccessLevel;
+                
+                
+                Console.WriteLine($"✅ AccessLevel изменен с {user.AuthorizationData.GetAccessLevel()} на {newAccessLevel}");
+            }
+
+            // Сохраняем изменения
+            var changes = await _context.SaveChangesAsync();
+            Console.WriteLine($"💾 Сохранено изменений: {changes}");
+
+            return changes > 0;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"❌ Ошибка изменения AccessLevel: {ex.Message}");
+            Console.WriteLine($"StackTrace: {ex.StackTrace}");
+            return false;
+        }
     }
 
     private string HashPassword(string password, string salt)

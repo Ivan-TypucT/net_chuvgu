@@ -632,5 +632,99 @@ body {
             flex-direction: column;
             gap: 8px;
         }
+        /* Стили админ-панели */
+        .admin-panel .x-tab-bar {
+            background: #2c3e50;
+        }
+
+        .admin-panel .x-tab {
+            color: #ecf0f1;
+            background: transparent;
+            border: none;
+        }
+
+        .admin-panel .x-tab-active {
+            color: #3498db;
+            border-bottom: 2px solid #3498db;
+        }
+
+        .admin-panel .x-grid-row {
+            cursor: pointer;
+        }
+
+        .admin-panel .x-grid-row:hover {
+            background-color: #f5f7fa;
+        }
+
+        .admin-panel .banned-user {
+            background-color: #ffeaea;
+        }
+
+        /* Статистика */
+        .stats-container {
+            display: flex;
+            justify-content: space-around;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .stat-item {
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            min-width: 150px;
+        }
+
+        .stat-icon {
+            font-size: 36px;
+            margin-bottom: 10px;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            color: #7f8c8d;
+            font-size: 14px;
+        }
+
+        /* Детали пользователя */
+        .user-details {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        .detail-row {
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .detail-row strong {
+            display: inline-block;
+            width: 150px;
+            color: #2c3e50;
+        }
+
+        /* Формы редактирования */
+        .x-form-textarea {
+            font-family: 'Arial', sans-serif;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .x-form-fieldset {
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+
+        .x-form-fieldset-legend {
+            color: #2c3e50;
+            font-weight: bold;
+        }
     }
 }

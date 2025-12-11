@@ -512,8 +512,10 @@ Ext.define('Marketplace.controller.Products', {
         }
     },
 
+
+
     /**
-     * Поиск товаров
+     * Поиск товаров (прямой API вызов с фильтрами)
      * @param {String} searchText - текст для поиска
      */
     searchProducts: function(searchText) {
@@ -525,33 +527,26 @@ Ext.define('Marketplace.controller.Products', {
             return;
         }
 
-        // Очищаем фильтр
-        productsStore.clearFilter();
+        // Прямой вызов API с параметром Search
+        Marketplace.util.API.post('/products/Products', {
+            Search: searchText || ''
+        })
+            .then(response => {
+                console.log(`✅ API вернул: ${response.data?.products?.length || 0} товаров`);
 
-        if (searchText && searchText.trim()) {
-            const searchLower = searchText.toLowerCase().trim();
+                // Принудительно обновляем store
+                productsStore.removeAll();
+                productsStore.loadData(response.data?.products || []);
 
-            // Фильтруем товары по названию, бренду и описанию
-            productsStore.filterBy(function(record) {
-                const name = (record.get('name') || '').toLowerCase();
-                const brand = (record.get('brand') || '').toLowerCase();
-                const description = (record.get('description') || '').toLowerCase();
-                const category = (record.get('category') || '').toLowerCase();
-
-                return name.includes(searchLower) ||
-                    brand.includes(searchLower) ||
-                    description.includes(searchLower) ||
-                    category.includes(searchLower);
+                console.log(`🔄 Store обновлен: ${productsStore.getCount()} товаров`);
+            })
+            .catch(error => {
+                console.error('❌ Ошибка поиска:', error);
             });
-
-            console.log(`✅ Применен поисковой фильтр`);
-        } else {
-            console.log('ℹ️ Поисковой запрос пуст, фильтр сброшен');
-        }
     },
 
     /**
-     * Фильтрация по категории
+     * Фильтрация по категории (прямой API вызов)
      * @param {String} categoryName - название категории
      */
     filterByCategory: function(categoryName) {
@@ -563,15 +558,65 @@ Ext.define('Marketplace.controller.Products', {
             return;
         }
 
-        // Очищаем фильтр
-        productsStore.clearFilter();
-
-        if (categoryName && categoryName !== 'Все категории') {
-            productsStore.filter('category', categoryName);
-            console.log(`✅ Применен фильтр по категории: ${categoryName}`);
-        } else {
-            console.log('ℹ️ Категория не выбрана, фильтр сброшен');
+        // Если "Все категории" или пусто - сбрасываем фильтр
+        if (!categoryName || categoryName === 'Все категории') {
+            this.resetFilters();
+            return;
         }
+
+        // Прямой вызов API с параметром Category
+        Marketplace.util.API.get('/products', {
+            Category: categoryName,  // именно Category с большой буквы
+            Page: 1,
+            PageSize: 100
+        })
+            .then(response => {
+                console.log(`✅ API вернул: ${response.data?.products?.length || 0} товаров категории "${categoryName}"`);
+
+                // Принудительно обновляем store
+                productsStore.removeAll();
+                productsStore.loadData(response.data?.products || []);
+
+                console.log(`🔄 Store обновлен: ${productsStore.getCount()} товаров`);
+            })
+            .catch(error => {
+                console.error('❌ Ошибка фильтрации:', error);
+            });
+    },
+
+    /**
+     * Сбросить все фильтры (загрузить все товары)
+     */
+    resetFilters: function() {
+        console.log('🔄 Сброс фильтров');
+
+        const productsStore = Ext.getStore('Products');
+        if (!productsStore) return;
+
+        // Прямой вызов API без фильтров
+        Marketplace.util.API.get('/products', {
+            Page: 1,
+            PageSize: 100
+        })
+            .then(response => {
+                console.log(`✅ API вернул все товары: ${response.data?.products?.length || 0}`);
+
+                // Принудительно обновляем store
+                productsStore.removeAll();
+                productsStore.loadData(response.data?.products || []);
+
+                console.log(`🔄 Store обновлен: ${productsStore.getCount()} товаров`);
+            })
+            .catch(error => {
+                console.error('❌ Ошибка загрузки:', error);
+            });
+    },
+
+    /**
+     * Загрузить все товары при старте
+     */
+    loadAllProducts: function() {
+        this.resetFilters(); // просто используем тот же метод
     },
 
     /**

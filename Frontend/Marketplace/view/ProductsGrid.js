@@ -35,8 +35,9 @@ Ext.define('Marketplace.view.ProductsGrid', {
             xtype: 'panel',
             itemId: 'promoBanner',
             cls: 'promo-banner',
-            height: 220,
+            flex:1,
             width: 320,
+            layout: 'fit',
             html: '<div class="promo-content"><h2>Загрузка акций...</h2></div>',
             listeners: {
                 afterrender: this.loadPromoBanner,
@@ -100,18 +101,39 @@ Ext.define('Marketplace.view.ProductsGrid', {
         panel.update(defaultHtml);
     },
 
-    /**
-     * Создание панели категорий
-     * @returns {Object} конфиг панели категорий
-     */
+    // В ProductsGrid.js в createCategoriesPanel():
     createCategoriesPanel: function() {
         console.log('📁 Создание панели категорий');
 
         const categoriesStore = Ext.getStore('Categories');
+
+        // Если store пустой - загружаем категории
+        if (categoriesStore.getCount() === 0) {
+            categoriesStore.loadCategories().then(() => {
+                this.updateCategoriesPanel();
+            });
+            return this.createLoadingPanel();
+        }
+
+        return this.createCategoriesButtons();
+    },
+
+    createLoadingPanel: function() {
+        return {
+            xtype: 'panel',
+            itemId: 'categoriesPanel',
+            cls: 'categories-panel',
+            height: 160,
+            html: '<div class="loading-categories">📂 Загрузка категорий...</div>'
+        };
+    },
+
+    createCategoriesButtons: function() {
+        const categoriesStore = Ext.getStore('Categories');
         const categoryButtons = categoriesStore.getRange().map(function(category) {
             return {
                 xtype: 'button',
-                text: `${category.get('icon')} ${category.get('name')}`,
+                text: `${category.get('icon') || '📦'} ${category.get('name')}`,
                 cls: 'category-btn',
                 handler: function() {
                     this.filterByCategory(category.get('id'));
@@ -122,8 +144,9 @@ Ext.define('Marketplace.view.ProductsGrid', {
 
         return {
             xtype: 'panel',
+            itemId: 'categoriesPanel',
             cls: 'categories-panel',
-            height: 80,
+            height: 160,
             layout: {
                 type: 'hbox',
                 pack: 'center'
@@ -132,6 +155,37 @@ Ext.define('Marketplace.view.ProductsGrid', {
         };
     },
 
+    updateCategoriesPanel: function() {
+        console.log('🔄 Обновление панели категорий');
+
+        // Находим старую панель
+        const oldPanel = this.down('#categoriesPanel');
+
+        if (oldPanel) {
+            // Сохраняем индекс позиции
+            const parent = oldPanel.up();
+            const index = parent.items.indexOf(oldPanel);
+
+            console.log(`📌 Старая панель найдена на позиции ${index}`);
+
+            // Уничтожаем старую
+            parent.remove(oldPanel, true);
+
+            // Создаем новую
+            const newPanel = this.createCategoriesButtons();
+
+            // Вставляем на ту же позицию
+            parent.insert(index, newPanel);
+
+            console.log('✅ Панель категорий заменена на той же позиции');
+        } else {
+            console.error('❌ Панель категорий не найдена');
+
+            // Если панель не найдена, просто добавляем новую
+            const newPanel = this.createCategoriesButtons();
+            this.add(newPanel);
+        }
+    },
     /**
      * Создание панели фильтров
      * @returns {Object} конфиг панели фильтров

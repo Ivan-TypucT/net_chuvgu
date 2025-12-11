@@ -73,7 +73,7 @@ Ext.define('Marketplace.util.API', {
      * @param {String} url - endpoint
      * @returns {Promise}
      */
-    get: function(url) {
+    get: function(url, data) {
         return this.request({ url: url, method: 'GET' });
     },
 

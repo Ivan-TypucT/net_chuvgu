@@ -23,6 +23,9 @@ namespace net_chuvgu.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
+                    b.Property<int>("AccessLevel")
+                        .HasColumnType("INTEGER");
+
                     b.Property<DateTime?>("BannedUntil")
                         .HasColumnType("TEXT");
 

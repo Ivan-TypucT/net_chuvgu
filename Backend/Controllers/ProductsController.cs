@@ -88,6 +88,77 @@ public class ProductsController : ApiControllerBase
 
         return Success(new { products = result, totalCount });
     }
+    
+    [HttpPost("Products")]
+    public async Task<IActionResult> GetProductsPost([FromBody] ProductFilter filter)
+    {
+        var query = _context.Products.AsQueryable();
+
+        if (!string.IsNullOrEmpty(filter.Category))
+            query = query.Where(p => p.Category.ToLower() == filter.Category.ToLower());
+
+        if (!string.IsNullOrEmpty(filter.Brand))
+            query = query.Where(p => p.Brand.ToLower() == filter.Brand.ToLower());
+
+        if (!string.IsNullOrEmpty(filter.Search))
+            query = query.Where(p => p.Name.ToLower().Contains(filter.Search.ToLower()) || p.Brand.ToLower().Contains(filter.Search.ToLower()));
+
+        if (filter.MinPrice.HasValue)
+            query = query.Where(p => p.Price >= filter.MinPrice);
+
+        if (filter.MaxPrice.HasValue)
+            query = query.Where(p => p.Price <= filter.MaxPrice);
+
+        // Сортировка
+        query = filter.SortBy?.ToLower() switch
+        {
+            "price_asc" => query.OrderBy(p => p.Price),
+            "price_desc" => query.OrderByDescending(p => p.Price),
+            "rating" => query.OrderByDescending(p => p.Rating),
+            "name" => query.OrderBy(p => p.Name),
+            _ => query.OrderByDescending(p => p.Id)
+        };
+
+        var totalCount = await query.CountAsync();
+        var products = await query
+            .Skip((filter.Page - 1) * filter.PageSize)
+            .Take(filter.PageSize)
+            .ToListAsync();
+
+        // Проверяем избранное для авторизованных пользователей
+        var userId = GetUserId();
+        List<int> favoriteIds = new List<int>();
+        
+        if (userId.HasValue)
+        {
+            favoriteIds = await _context.UserFavorites
+                .Where(uf => uf.UserId == userId.Value && products.Select(p => p.Id).Contains(uf.ProductId))
+                .Select(uf => uf.ProductId)
+                .ToListAsync();
+        }
+
+        // Формируем результат с флагом избранного
+        var result = products.Select(p => new
+        {
+            p.Id,
+            p.Name,
+            p.Brand,
+            p.Category,
+            p.Price,
+            p.OldPrice,
+            p.Image,
+            p.Rating,
+            p.ReviewsCount,
+            p.Weight,
+            p.Description,
+            p.InStock,
+            p.StockQuantity,
+            p.CreatedAt,
+            IsFavorite = favoriteIds.Contains(p.Id)
+        }).ToList();
+
+        return Success(new { products = result, totalCount });
+    }
 
     [HttpGet("{id}")]
     public async Task<IActionResult> GetProduct(int id)
@@ -201,6 +272,8 @@ public class ProductsController : ApiControllerBase
         return Success(result);
     }
 
+    
+
     [HttpPut("{id}")]
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Update(int id, [FromBody] Product update)
@@ -289,9 +362,9 @@ public class ProductsController : ApiControllerBase
 
 public class ProductFilter
 {
-    public string? Category { get; set; }
-    public string? Brand { get; set; }
-    public string? Search { get; set; }
+    public string? Category { get; set; } 
+    public string? Brand { get; set; } 
+    public string? Search { get; set; } 
     public decimal? MinPrice { get; set; }
     public decimal? MaxPrice { get; set; }
     public string? SortBy { get; set; }

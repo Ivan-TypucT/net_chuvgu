@@ -19,8 +19,7 @@ public class AuthorizationData
     public int UserId { get; set; }
     
     [Required]
-    [DefaultValue(0)]
-    private int AccessLevel { get; set; }
+    public int AccessLevel { get; set; }
 
     public int GetAccessLevel()
     {

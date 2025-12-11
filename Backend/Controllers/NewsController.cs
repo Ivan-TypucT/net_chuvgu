@@ -18,7 +18,18 @@ public class NewsController : ApiControllerBase
     [HttpGet]
     public async Task<IActionResult> GetNews([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
     {
+        
         var query = _context.News.Where(n => n.IsActive).OrderByDescending(n => n.PublishedAt);
+        var totalCount = await query.CountAsync();
+        var items = await query.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
+        return Success(new { items, totalCount });
+    }
+    
+    [HttpGet("newsAll")]
+    public async Task<IActionResult> GetNewsAll([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+    {
+        
+        var query = _context.News.OrderByDescending(n => n.PublishedAt);
         var totalCount = await query.CountAsync();
         var items = await query.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
         return Success(new { items, totalCount });
@@ -59,7 +70,7 @@ public class NewsController : ApiControllerBase
     }
 
     // CRUD (админ)
-    [HttpPost]
+    [HttpPost("create")]
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Create([FromBody] News news)
     {
@@ -68,7 +79,7 @@ public class NewsController : ApiControllerBase
         return Success(news);
     }
 
-    [HttpPut("{id}")]
+    [HttpPut("update/{id}")]
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Update(int id, [FromBody] News update)
     {

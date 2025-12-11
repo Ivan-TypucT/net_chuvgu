@@ -58,7 +58,8 @@ Ext.onReady(function() {
         controllers: [
             'Marketplace.controller.Auth',
             'Marketplace.controller.Products',
-            'Marketplace.controller.Navigation'
+            'Marketplace.controller.Navigation',
+            'Marketplace.controller.Admin'
         ],
 
         launch: function() {
@@ -166,6 +167,27 @@ Ext.onReady(function() {
                     navCtrl.showNewsTab();
                 } else {
                     console.error('❌ Navigation controller не найден');
+                }
+            };
+
+            /**
+             * Показать админ-панель (если есть права)
+             */
+            Marketplace.showAdminPanel = function() {
+                console.log('👑 Открытие админ-панели');
+                const adminCtrl = Ext.app.Application.instance.getController('Marketplace.controller.Admin');
+                if (adminCtrl && adminCtrl.checkAdminAccess) {
+                    adminCtrl.checkAdminAccess().then(isAdmin => {
+                        if (isAdmin) {
+                            const tabPanel = Ext.ComponentQuery.query('mainpanel tabpanel')[0];
+                            const adminPanel = tabPanel.down('adminpanel');
+                            if (adminPanel) {
+                                tabPanel.setActiveTab(adminPanel);
+                            }
+                        } else {
+                            Marketplace.util.ErrorHandler.showError('Недостаточно прав для доступа к админ-панели');
+                        }
+                    });
                 }
             };
             

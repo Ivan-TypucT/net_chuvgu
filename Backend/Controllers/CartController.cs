@@ -17,7 +17,6 @@ public class CartController : ApiControllerBase
     }
 
     [HttpGet]
-    [Authorize]
     public async Task<IActionResult> GetCart()
     {
         var userId = GetUserId();

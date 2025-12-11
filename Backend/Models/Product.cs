@@ -36,7 +36,8 @@ public class Product
     public int StockQuantity { get; set; }
     public DateTime CreatedAt { get; set; }
         
-    public virtual ICollection<UserFavorite> UserFavorites { get; set; }
-    public virtual ICollection<CartItem> CartItems { get; set; }
-    public virtual ICollection<OrderItem> OrderItems { get; set; }
+    // ИЗМЕНИ НА ЭТО:
+    public virtual ICollection<UserFavorite> UserFavorites { get; set; } = new List<UserFavorite>();
+    public virtual ICollection<CartItem> CartItems { get; set; } = new List<CartItem>();
+    public virtual ICollection<OrderItem> OrderItems { get; set; } = new List<OrderItem>();
 }
